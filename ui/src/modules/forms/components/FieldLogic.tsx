@@ -199,7 +199,7 @@ function FieldLogic(props: Props) {
   };
 
   const renderTags = () => {
-    if (logic.logicAction !== 'tag' || !logic.logicAction) {
+    if (logic.logicAction !== 'tag' || type === 'logic') {
       return null;
     }
 
@@ -207,7 +207,6 @@ function FieldLogic(props: Props) {
       <FormGroup>
         <SelectTags
           type={'customer'}
-          description="tag contact"
           onChange={onChangeTags}
           defaultValue={logic.tagIds || []}
         />
@@ -229,7 +228,6 @@ function FieldLogic(props: Props) {
     };
 
     const onFetchProperties = customProperties => {
-      console.log('customProperties: ', customProperties);
       setProperties(customProperties.fields);
     };
 

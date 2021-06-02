@@ -438,15 +438,17 @@ class FieldForm extends React.Component<Props, State> {
           {this.renderCustomProperty()}
         </CollapseContent>
 
-        <CollapseContent title={__('Logics')} compact={true}>
-          <FieldLogics
-            fields={fields}
-            currentField={field}
-            onFieldChange={this.onFieldChange}
-            tags={this.props.tags}
-            type="logic"
-          />
-        </CollapseContent>
+        {fields.length > 0 && (
+          <CollapseContent title={__('Logic')} compact={true}>
+            <FieldLogics
+              fields={fields}
+              currentField={field}
+              onFieldChange={this.onFieldChange}
+              tags={this.props.tags}
+              type="logic"
+            />
+          </CollapseContent>
+        )}
 
         <CollapseContent title={__('Actions')} compact={true}>
           <FieldLogics
@@ -506,7 +508,7 @@ class FieldForm extends React.Component<Props, State> {
 
   renderCustomPropertyGroup() {
     const { field, group } = this.state;
-    const { fields } = this.props;
+
     if (
       [
         'email',
@@ -528,20 +530,6 @@ class FieldForm extends React.Component<Props, State> {
       { value: 'customer', label: 'Customer' },
       { value: 'company', label: 'Company' }
     ];
-
-    for (const { logics = [] } of fields) {
-      if (logics.findIndex(e => e.logicAction === 'deal') > -1) {
-        options.push({ value: 'deal', label: 'Sales pipeline' });
-      }
-
-      if (logics.findIndex(e => e.logicAction === 'task') > -1) {
-        options.push({ value: 'task', label: 'Task' });
-      }
-
-      if (logics.findIndex(e => e.logicAction === 'ticket') > -1) {
-        options.push({ value: 'ticket', label: 'Ticket' });
-      }
-    }
 
     return (
       <>

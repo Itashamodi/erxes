@@ -57,14 +57,7 @@ class SelectChannels extends React.Component<Props, {}> {
   };
 
   render() {
-    const {
-      tags,
-      defaultValue,
-      isRequired,
-      description = __(
-        'In which Channel(s) do you want to add this integration?'
-      )
-    } = this.props;
+    const { tags, defaultValue, isRequired, description } = this.props;
 
     return (
       <FormGroup>

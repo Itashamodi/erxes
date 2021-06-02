@@ -85,7 +85,7 @@ export interface IFormDoc {
     associatedFieldId: string;
     groupId: string;
     isHidden?: boolean;
-    column?: number;
+    column?: string;
   };
 }
 

@@ -29,7 +29,7 @@ type Props = {
 function FieldLogics(props: Props) {
   const { fields, currentField, onFieldChange, type } = props;
 
-  const [logics, setLogics] = useState(
+  const [logics, setLogics] = useState<IFieldLogic[]>(
     (currentField.logics || []).map(
       ({
         fieldId,
@@ -40,7 +40,9 @@ function FieldLogics(props: Props) {
         tagIds,
         stageId,
         boardId,
-        pipelineId
+        pipelineId,
+        itemId,
+        itemName
       }) => {
         return {
           fieldId,
@@ -51,13 +53,28 @@ function FieldLogics(props: Props) {
           tagIds,
           stageId,
           boardId,
-          pipelineId
+          pipelineId,
+          itemId,
+          itemName
         };
       }
     )
   );
 
   useEffect(() => {
+    console.log('useEffect called: ', type);
+    console.log('useEffect: ', logics);
+
+    // setLogics(logics.filter(e => ['show', 'hide'].includes(e.logicAction)));
+
+    // if (type === 'action') {
+    //   setLogics(
+    //     logics.filter(e =>
+    //       ['tag', 'deal', 'ticket', 'task'].includes(e.logicAction)
+    //     )
+    //   );
+    // }
+
     onFieldChange('logics', logics);
   }, [logics, onFieldChange]);
 
@@ -85,7 +102,7 @@ function FieldLogics(props: Props) {
     }
 
     setLogics([
-      ...logics,
+      ...(currentField.logics || []),
       {
         fieldId: '',
         tempFieldId: '',
@@ -101,8 +118,13 @@ function FieldLogics(props: Props) {
   };
 
   const onEnableLogic = () => {
-    onFieldChange('logicAction', type === 'logic' ? 'show' : 'tag');
     addLogic();
+    onFieldChange('logicAction', 'show');
+  };
+
+  const onEnableAction = () => {
+    addLogic();
+    onFieldChange('logicAction', 'tag');
   };
 
   const removeLogic = (index: number) => {
@@ -172,7 +194,7 @@ function FieldLogics(props: Props) {
         uppercase={false}
         btnStyle="success"
         icon="check-circle"
-        onClick={onEnableLogic}
+        onClick={type === 'logic' ? onEnableLogic : onEnableAction}
       >
         {`Enable ${type}`}
       </Button>
