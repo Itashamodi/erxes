@@ -18,47 +18,63 @@ export interface ILogic {
   logicOperator?: string;
   logicValue?: string | number | Date | string[];
   logicAction: string;
+}
+
+export interface IAction extends ILogic {
   tagIds?: string[];
   stageId?: string;
   itemId?: string;
   itemName?: string;
 }
 
-export const logicSchema = new Schema(
-  {
-    fieldId: field({ type: String }),
-    logicOperator: field({
-      type: String,
-      optional: true
-    }),
-    logicValue: field({
-      type: Schema.Types.Mixed,
-      optional: true
-    }),
-    logicAction: field({
-      type: String,
-      label:
-        'If action is show field will appear when logics fulfilled, if action is hide it will disappear when logic fulfilled'
-    }),
-    tagIds: field({
-      type: [String],
-      optional: true
-    }),
-    stageId: field({
-      type: String,
-      optional: true
-    }),
-    itemId: field({
-      type: String,
-      optional: true
-    }),
-    itemName: field({
-      type: String,
-      optional: true
-    })
-  },
-  { _id: false }
-);
+const LogicSchema = (fields?: any) => {
+  const schema = new Schema(
+    {
+      fieldId: field({ type: String }),
+      logicOperator: field({
+        type: String,
+        optional: true
+      }),
+      logicValue: field({
+        type: Schema.Types.Mixed,
+        optional: true
+      }),
+      logicAction: field({
+        type: String,
+        label:
+          'If action is show field will appear when logics fulfilled, if action is hide it will disappear when logic fulfilled'
+      })
+    },
+    { _id: false }
+  );
+
+  if (fields) {
+    schema.add(fields);
+  }
+
+  return schema;
+};
+
+export const logicSchema = LogicSchema();
+
+export const actionSchema = LogicSchema({
+  tagIds: field({
+    type: [String],
+    optional: true
+  }),
+  stageId: field({
+    type: String,
+    optional: true
+  }),
+  itemId: field({
+    type: String,
+    optional: true
+  }),
+  itemName: field({
+    type: String,
+    optional: true
+  })
+});
 
 export const boardsPipelinesSchema = new Schema(
   {
@@ -94,6 +110,7 @@ export interface IField extends IVisibility {
   associatedFieldId?: string;
   logicAction?: string;
   logics?: ILogic[];
+  actions?: IAction[];
   tempFieldId?: string;
   column?: string;
   groupName?: string;
@@ -183,6 +200,7 @@ export const fieldSchema = schemaWrapper(
       label: 'Stores custom property fieldId for form field id'
     }),
     logics: field({ type: [logicSchema] }),
+    actions: field({ type: [actionSchema] }),
     column: field({ type: String, optional: true }),
     logicAction: field({
       type: String,

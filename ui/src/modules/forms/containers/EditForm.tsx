@@ -110,6 +110,13 @@ class EditFormContainer extends React.Component<FinalProps> {
               });
             }
 
+            if (f.actions && f.actions.length > 0) {
+              f.actions = f.actions.map(a => {
+                delete a.__typename;
+                return a;
+              });
+            }
+
             return f;
           });
 

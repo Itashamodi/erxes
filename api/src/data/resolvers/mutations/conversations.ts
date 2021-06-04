@@ -44,7 +44,7 @@ interface IReplyFacebookComment {
   content: string;
 }
 
-interface IConversationConvert {
+export interface IConversationConvertParams {
   _id: string;
   type: string;
   itemId: string;
@@ -668,76 +668,10 @@ const conversationMutations = {
 
   async conversationConvertToCard(
     _root,
-    params: IConversationConvert,
+    params: IConversationConvertParams,
     { user, docModifier }: IContext
   ) {
-    const { _id, type, itemId, itemName, stageId } = params;
-
-    const conversation = await Conversations.getConversation(_id);
-
-    const { collection, update, create } = getCollection(type);
-
-    if (itemId) {
-      const oldItem = await collection.findOne({ _id: itemId }).lean();
-
-      const doc = oldItem;
-
-      if (conversation.assignedUserId) {
-        const assignedUserIds = oldItem.assignedUserIds || [];
-        assignedUserIds.push(conversation.assignedUserId);
-
-        doc.assignedUserIds = assignedUserIds;
-      }
-
-      const sourceConversationIds: string[] =
-        oldItem.sourceConversationIds || [];
-
-      sourceConversationIds.push(conversation._id);
-
-      doc.sourceConversationIds = sourceConversationIds;
-
-      const item = await update(oldItem._id, doc);
-
-      item.userId = user._id;
-
-      await putActivityLog({
-        action: ACTIVITY_LOG_ACTIONS.CREATE_BOARD_ITEM,
-        data: { item, contentType: type }
-      });
-
-      const relTypeIds: string[] = [];
-
-      sourceConversationIds.forEach(async conversationId => {
-        const con = await Conversations.getConversation(conversationId);
-
-        if (con.customerId) {
-          relTypeIds.push(con.customerId);
-        }
-      });
-
-      if (conversation.customerId) {
-        await Conformities.addConformity({
-          mainType: type,
-          mainTypeId: item._id,
-          relType: 'customer',
-          relTypeId: conversation.customerId
-        });
-      }
-
-      return item._id;
-    } else {
-      const doc: any = {};
-
-      doc.name = itemName;
-      doc.stageId = stageId;
-      doc.sourceConversationIds = [_id];
-      doc.customerIds = [conversation.customerId];
-      doc.assignedUserIds = [conversation.assignedUserId];
-
-      const item = await itemsAdd(doc, type, user, create, docModifier);
-
-      return item._id;
-    }
+    return Conversations.convert(params, user, docModifier);
   },
 
   async conversationEditCustomFields(

@@ -7,13 +7,16 @@ export interface IFieldLogic {
   logicOperator: string;
   logicValue: string;
   logicAction: string;
+  __typename?: string;
+}
+
+export interface IFieldAction extends IFieldLogic {
   tagIds?: string[];
   boardId?: string;
   pipelineId?: string;
   stageId?: string;
   itemId?: string;
   itemName?: string;
-  __typename?: string;
 }
 export interface IField {
   _id: string;
@@ -44,6 +47,7 @@ export interface IField {
     contentType: string;
   };
   logics?: IFieldLogic[];
+  actions?: IFieldAction[];
   groupName?: string;
   pageNumber?: number;
   stageId?: string;

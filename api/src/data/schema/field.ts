@@ -16,12 +16,20 @@ const fieldCommonFields = `
   stageId: String
 `;
 
+const commonLogicTypes = `
+  fieldId: String!
+  logicOperator: String
+  logicValue: JSON
+  logicAction: String
+`;
+
 export const fieldsTypes = `
   type Logic {
-    fieldId: String!
-    logicOperator: String
-    logicValue: JSON
-    logicAction: String
+    ${commonLogicTypes}
+  }
+
+  type Action {
+    ${commonLogicTypes}
     tagIds: [String]
     stageId: String
     pipelineId: String
@@ -44,7 +52,7 @@ export const fieldsTypes = `
     lastUpdatedUserId: String
     associatedField: Field
     logics: [Logic]
-
+    actions: [Action]
     ${fieldCommonFields}
   }
 
@@ -59,6 +67,14 @@ export const fieldsTypes = `
     logicOperator: String
     logicValue: JSON
     logicAction: String!
+  }
+
+  input ActionInput {
+    fieldId: String
+    tempFieldId: String
+    logicOperator: String
+    logicValue: JSON
+    logicAction: String!
     tagIds: [String]
     itemId: String
     itemName: String
@@ -66,12 +82,13 @@ export const fieldsTypes = `
     pipelineId: String
     boardId: String
   }
+  
 
   input FieldItem {
     _id: String
     tempFieldId: String
     logics: [LogicInput]
-
+    actions: [ActionInput]
     ${fieldCommonFields}
   }
 

@@ -31,7 +31,7 @@ import {
   KnowledgeBaseParentCategory
 } from './knowledgeBaseCategory';
 import KnowledgeBaseTopic from './knowledgeBaseTopic';
-import Logic from './logic';
+import Action from './action';
 import Mutation from './mutations';
 import Notification from './notification';
 import Permission from './permission';
@@ -91,7 +91,7 @@ const resolvers: any = {
   Form,
   FieldsGroup: fieldsGroup,
   Field: field,
-  Logic,
+  Action,
   User,
   ImportHistory,
   Permission,

@@ -2,9 +2,11 @@ import CardSelect from 'modules/boards/components/portable/CardSelect';
 import BoardSelect from 'modules/boards/containers/BoardSelect';
 import { SelectContainer } from 'modules/boards/styles/common';
 import { HeaderRow, HeaderContent } from 'modules/boards/styles/item';
-import ControlLabel from 'modules/common/components/form/Label';
-import { IField } from 'modules/segments/types';
+import { IField } from 'modules/settings/properties/types';
 import React from 'react';
+import { ControlLabel, FormGroup } from 'modules/common/components/form';
+import Select from 'react-select-plus';
+import { __ } from 'modules/common/utils';
 
 type Props = {
   type: string;
@@ -12,6 +14,8 @@ type Props = {
   pipelineId?: string;
   stageId?: string;
   cardId?: string;
+  cardName?: string;
+  propertyId?: string;
   fetchCards: (stageId: string, callback: (cards: any) => void) => void;
   fetchProperties: (
     boardId: string,
@@ -20,17 +24,20 @@ type Props = {
   ) => void;
   onChangeCard: (name?: string, cardId?: string) => void;
   onFetchProperties: (fields: IField[]) => void;
+  onChangeStage: (stageId: string) => void;
+  onChangeProperty: (selectedField: IField) => void;
 };
 
 type State = {
   stageId: string;
-  name: string;
+  cardName: string;
   disabled: boolean;
   boardId: string;
   pipelineId: string;
   cards: any;
   cardId: string;
   properties?: IField[];
+  propertyId?: string;
 };
 
 class AddForm extends React.Component<Props, State> {
@@ -44,13 +51,15 @@ class AddForm extends React.Component<Props, State> {
       stageId: props.stageId || '',
       cardId: props.cardId || '',
       cards: [],
-      name: ''
+      cardName: props.cardName || '',
+      properties: [],
+      propertyId: props.propertyId || ''
     };
   }
 
   onChangeField = <T extends keyof State>(name: T, value: State[T]) => {
     if (name === 'stageId') {
-      const { fetchCards, fetchProperties } = this.props;
+      const { fetchCards, fetchProperties, onChangeStage } = this.props;
       fetchCards(String(value), (cards: any) => {
         if (cards) {
           this.setState({
@@ -59,16 +68,14 @@ class AddForm extends React.Component<Props, State> {
         }
       });
 
-      fetchProperties(
-        this.state.boardId,
-        this.state.pipelineId,
-        (fields: IField[]) => {
-          if (fields) {
-            this.props.onFetchProperties(fields);
-            this.setState({ properties: fields });
-          }
+      fetchProperties(this.state.boardId, this.state.pipelineId, data => {
+        if (data) {
+          this.props.onFetchProperties(data.fields);
+          this.setState({ properties: data.fields });
         }
-      );
+      });
+
+      onChangeStage(value);
     }
     this.setState(({ [name]: value } as unknown) as Pick<State, keyof State>);
   };
@@ -95,10 +102,43 @@ class AddForm extends React.Component<Props, State> {
     );
   }
 
+  renderProperties() {
+    if (this.state.cardName || this.state.cardId) {
+      return null;
+    }
+
+    const { onChangeProperty } = this.props;
+    const { properties = [] } = this.state;
+
+    const onChange = option => {
+      if (onChangeProperty) {
+        const customProperty = properties.find(e => e._id === option.value);
+        if (customProperty) {
+          onChangeProperty(customProperty);
+          this.setState({ propertyId: customProperty._id });
+        }
+      }
+    };
+
+    return (
+      <FormGroup>
+        <ControlLabel>Property</ControlLabel>
+        <Select
+          placeholder={__('Select property')}
+          value={this.state.propertyId}
+          onChange={onChange}
+          options={properties.map(e => ({ label: e.text || '', value: e._id }))}
+          multi={false}
+          clearable={true}
+        />
+      </FormGroup>
+    );
+  }
+
   onChangeCardSelect = option => {
     const { cardId, name } = option;
 
-    if (cardId) {
+    if (cardId && cardId !== 'copiedItem') {
       return this.props.onChangeCard('', cardId);
     }
 
@@ -110,27 +150,39 @@ class AddForm extends React.Component<Props, State> {
     this.props.onChangeCard(name, '');
   };
 
-  render() {
+  renderCardSelect() {
     const { type } = this.props;
 
+    if (this.state.propertyId) {
+      return null;
+    }
+
+    return (
+      <SelectContainer>
+        <HeaderRow>
+          <HeaderContent>
+            <ControlLabel required={true}>Name</ControlLabel>
+
+            <CardSelect
+              placeholder={`Add a new ${type} or select one`}
+              options={this.state.cards}
+              onChange={this.onChangeCardSelect}
+              type={type}
+              value={'copiedItem'}
+              additionalValue={this.state.cardName}
+            />
+          </HeaderContent>
+        </HeaderRow>
+      </SelectContainer>
+    );
+  }
+
+  render() {
     return (
       <>
         {this.renderSelect()}
-        <SelectContainer>
-          <HeaderRow>
-            <HeaderContent>
-              <ControlLabel required={true}>Name</ControlLabel>
-
-              <CardSelect
-                placeholder={`Add a new ${type} or select one`}
-                options={this.state.cards}
-                onChange={this.onChangeCardSelect}
-                type={type}
-                additionalValue={this.state.name}
-              />
-            </HeaderContent>
-          </HeaderRow>
-        </SelectContainer>
+        {this.renderProperties()}
+        {this.renderCardSelect()}
       </>
     );
   }

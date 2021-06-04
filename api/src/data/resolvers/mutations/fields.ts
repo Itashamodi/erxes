@@ -131,24 +131,6 @@ const fieldMutations = {
       response.push(field);
     }
 
-    const fieldsWithSelfId = await Fields.find({
-      contentTypeId,
-      'logics.fieldId': 'self'
-    }).lean();
-
-    for (const field of fieldsWithSelfId) {
-      const { logics = [] } = field;
-      const index = logics.findIndex(e => e.fieldId === 'self');
-      if (index > -1) {
-        logics[index].fieldId = field._id;
-        field.logics = logics;
-      }
-      await Fields.updateField(field._id, {
-        ...field,
-        lastUpdatedUserId: user._id
-      });
-    }
-
     return response;
   },
 

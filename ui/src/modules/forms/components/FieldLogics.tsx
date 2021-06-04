@@ -3,7 +3,11 @@ import Button from 'modules/common/components/Button';
 import Icon from 'modules/common/components/Icon';
 import Info from 'modules/common/components/Info';
 import { __ } from 'modules/common/utils';
-import { IField, IFieldLogic } from 'modules/settings/properties/types';
+import {
+  IField,
+  IFieldAction,
+  IFieldLogic
+} from 'modules/settings/properties/types';
 import { LinkButton } from 'modules/settings/team/styles';
 import { ITag } from 'modules/tags/types';
 import React, { useEffect, useState } from 'react';
@@ -12,12 +16,13 @@ import FieldLogic from './FieldLogic';
 type Props = {
   onFieldChange: (
     name: string,
-    value: string | boolean | string[] | IFieldLogic[]
+    value: string | boolean | string[] | IFieldLogic[] | IFieldAction[]
   ) => void;
   fields: IField[];
   currentField: IField;
   tags: ITag[];
   type: string;
+  onPropertyChange: (selectedField: IField) => void;
 };
 
 // const showOptions = [
@@ -30,85 +35,74 @@ function FieldLogics(props: Props) {
   const { fields, currentField, onFieldChange, type } = props;
 
   const [logics, setLogics] = useState<IFieldLogic[]>(
-    (currentField.logics || []).map(
-      ({
-        fieldId,
-        tempFieldId,
-        logicOperator,
-        logicValue,
-        logicAction,
-        tagIds,
-        stageId,
-        boardId,
-        pipelineId,
-        itemId,
-        itemName
-      }) => {
-        return {
-          fieldId,
-          tempFieldId,
-          logicOperator,
-          logicValue,
-          logicAction,
-          tagIds,
-          stageId,
-          boardId,
-          pipelineId,
-          itemId,
-          itemName
-        };
-      }
-    )
+    currentField.logics || []
+  );
+
+  const [actions, setActions] = useState<IFieldAction[]>(
+    currentField.actions || []
   );
 
   useEffect(() => {
-    console.log('useEffect called: ', type);
-    console.log('useEffect: ', logics);
-
-    // setLogics(logics.filter(e => ['show', 'hide'].includes(e.logicAction)));
-
-    // if (type === 'action') {
-    //   setLogics(
-    //     logics.filter(e =>
-    //       ['tag', 'deal', 'ticket', 'task'].includes(e.logicAction)
-    //     )
-    //   );
-    // }
-
+    console.log('use effect logics: ', logics);
     onFieldChange('logics', logics);
   }, [logics, onFieldChange]);
+
+  useEffect(() => {
+    console.log('use effect actions');
+    onFieldChange('actions', actions);
+  }, [actions, onFieldChange]);
 
   // const onChangeLogicAction = e =>
   //   onFieldChange('logicAction', e.currentTarget.value);
 
-  const onChangeLogic = (name, value, index) => {
+  const onChangeLogic = (name, value, index, isLogic: boolean) => {
     // find current editing one
-    const currentLogic = logics.find((l, i) => i === index);
+    if (isLogic) {
+      console.log('isLogic: ', isLogic);
+      const currentLogic = logics.find((l, i) => i === index);
 
-    // set new value
-    if (currentLogic) {
-      currentLogic[name] = value;
+      // set new value
+      if (currentLogic) {
+        currentLogic[name] = value;
+      }
+
+      setLogics(logics);
+      return onFieldChange('logics', logics);
     }
 
-    setLogics(logics);
-    onFieldChange('logics', logics);
+    const currentAction = actions.find((l, i) => i === index);
+
+    // set new value
+    if (currentAction) {
+      currentAction[name] = value;
+    }
+
+    setActions(actions);
+    onFieldChange('actions', actions);
   };
 
   const addLogic = () => {
-    let logicAction = 'show';
-
-    if (type === 'action') {
-      logicAction = 'tag';
-    }
-
     setLogics([
-      ...(currentField.logics || []),
+      ...logics,
       {
         fieldId: '',
         tempFieldId: '',
         logicOperator: 'is',
         logicValue: '',
-        logicAction,
+        logicAction: 'show'
+      }
+    ]);
+  };
+
+  const addAction = () => {
+    setActions([
+      ...actions,
+      {
+        fieldId: currentField._id,
+        tempFieldId: currentField._id,
+        logicOperator: 'is',
+        logicValue: '',
+        logicAction: 'tag',
         tagIds: undefined,
         stageId: undefined,
         boardId: undefined,
@@ -119,73 +113,61 @@ function FieldLogics(props: Props) {
 
   const onEnableLogic = () => {
     addLogic();
-    onFieldChange('logicAction', 'show');
   };
 
   const onEnableAction = () => {
-    addLogic();
-    onFieldChange('logicAction', 'tag');
+    addAction();
   };
 
   const removeLogic = (index: number) => {
     setLogics(logics.filter((l, i) => i !== index));
   };
 
+  const renderRows = data => {
+    return (
+      <>
+        {data.map((item, index) => (
+          <FieldLogic
+            key={index}
+            fields={fields.filter(field => field._id !== currentField._id)}
+            logic={type === 'logic' ? item : null}
+            action={type === 'action' ? item : null}
+            onChangeLogic={onChangeLogic}
+            removeLogic={removeLogic}
+            onChangeProperty={props.onPropertyChange}
+            index={index}
+            tags={props.tags}
+            currentField={props.currentField}
+            type={type}
+          />
+        ))}
+
+        <LinkButton onClick={type === 'logic' ? addLogic : addAction}>
+          <Icon icon="plus-1" /> {`Add another ${type}`}
+        </LinkButton>
+      </>
+    );
+  };
+
   const renderContent = () => {
     let enabled = false;
+    // const { logics = [], actions = [] } = currentField;
+    const currentActions = currentField.actions || [];
+    const currentLogics = currentField.logics || [];
 
-    let hasLogic = false;
-    let hasAction = false;
+    let data = logics;
 
-    for (const logic of currentField.logics || []) {
-      if (['show', 'hide'].includes(logic.logicAction)) {
-        hasLogic = true;
-      }
-
-      if (['tag', 'deal', 'task', 'ticket'].includes(logic.logicAction)) {
-        hasAction = true;
-      }
-    }
-
-    if (type === 'action' && hasAction) {
+    if (type === 'action' && currentActions.length > 0) {
       enabled = true;
+      data = actions;
     }
 
-    if (type === 'logic' && hasLogic) {
+    if (type === 'logic' && currentLogics.length > 0) {
       enabled = true;
     }
 
     if (enabled) {
-      return (
-        <>
-          {/* <FormGroup>
-            <FormControl
-              componentClass="select"
-              defaultValue={currentField.logicAction}
-              name="logicAction"
-              options={showOptions}
-              onChange={onChangeLogicAction}
-            />
-          </FormGroup> */}
-          {logics.map((logic, index) => (
-            <FieldLogic
-              key={index}
-              fields={fields.filter(field => field._id !== currentField._id)}
-              logic={logic}
-              onChangeLogic={onChangeLogic}
-              removeLogic={removeLogic}
-              index={index}
-              tags={props.tags}
-              currentField={props.currentField}
-              type={type}
-            />
-          ))}
-
-          <LinkButton onClick={addLogic}>
-            <Icon icon="plus-1" /> {`Add another ${type}`}
-          </LinkButton>
-        </>
-      );
+      return renderRows(data);
     }
 
     return (

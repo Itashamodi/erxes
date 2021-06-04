@@ -120,7 +120,7 @@ class Form extends React.Component<Props, State> {
           <ControlLabel>{__('Form description')}</ControlLabel>
           <FormControl
             componentClass="textarea"
-            name="desc"
+            name="description"
             value={description}
             onChange={onChangeField}
           />
@@ -140,7 +140,7 @@ class Form extends React.Component<Props, State> {
         <FormGroup>
           <ControlLabel>{__('Form button text')}</ControlLabel>
           <FormControl
-            name="btnText"
+            name="buttonText"
             value={buttonText}
             onChange={onChangeField}
           />

@@ -1,8 +1,8 @@
 import { Pipelines, Stages } from '../../db/models';
-import { ILogic } from '../../db/models/definitions/fields';
+import { IAction } from '../../db/models/definitions/fields';
 
 export default {
-  async pipelineId(root: ILogic) {
+  async pipelineId(root: IAction) {
     if (!root.stageId) {
       return null;
     }
@@ -11,7 +11,7 @@ export default {
     return stage.pipelineId;
   },
 
-  async boardId(root: ILogic) {
+  async boardId(root: IAction) {
     if (!root.stageId) {
       return null;
     }

@@ -23,6 +23,7 @@ type Props = {
   options: [{ label: string; value: string }];
   onChange: (option: { cardId?: string; name?: string }) => void;
   type: string;
+  value?: string;
   additionalValue?: string;
 };
 
@@ -83,10 +84,16 @@ class CardSelect extends React.Component<Props, State> {
 
   render() {
     const { placeholder, options, additionalValue } = this.props;
-    const { selectedValue } = this.state;
+    let { selectedValue } = this.state;
+
+    const option = { value: 'copiedItem', label: additionalValue || '' };
+
+    if (this.props.value) {
+      selectedValue = option;
+    }
 
     if (additionalValue) {
-      options.push({ value: 'copiedItem', label: additionalValue });
+      options.push(option);
     }
 
     return (

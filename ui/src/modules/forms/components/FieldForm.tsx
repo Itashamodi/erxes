@@ -10,7 +10,11 @@ import { FlexItem } from 'modules/common/components/step/styles';
 import Toggle from 'modules/common/components/Toggle';
 import { __ } from 'modules/common/utils';
 import SelectProperty from 'modules/settings/properties/containers/SelectProperty';
-import { IField, IFieldLogic } from 'modules/settings/properties/types';
+import {
+  IField,
+  IFieldAction,
+  IFieldLogic
+} from 'modules/settings/properties/types';
 import React from 'react';
 import Modal from 'react-bootstrap/Modal';
 import {
@@ -76,7 +80,7 @@ class FieldForm extends React.Component<Props, State> {
 
   onFieldChange = (
     name: string,
-    value: string | boolean | number | string[] | IFieldLogic[]
+    value: string | boolean | number | string[] | IFieldLogic[] | IFieldAction[]
   ) => {
     this.setFieldAttrChanges(name, value);
   };
@@ -145,8 +149,9 @@ class FieldForm extends React.Component<Props, State> {
 
   setFieldAttrChanges(
     attributeName: string,
-    value: string | boolean | number | string[] | IFieldLogic[]
+    value: string | boolean | number | string[] | IFieldLogic[] | IFieldAction[]
   ) {
+    console.log('attributeName: ', attributeName);
     const { field } = this.state;
 
     field[attributeName] = value;
@@ -444,6 +449,7 @@ class FieldForm extends React.Component<Props, State> {
               fields={fields}
               currentField={field}
               onFieldChange={this.onFieldChange}
+              onPropertyChange={this.onPropertyChange}
               tags={this.props.tags}
               type="logic"
             />
@@ -455,6 +461,7 @@ class FieldForm extends React.Component<Props, State> {
             fields={fields}
             currentField={field}
             onFieldChange={this.onFieldChange}
+            onPropertyChange={this.onPropertyChange}
             tags={this.props.tags}
             type="action"
           />

@@ -59,6 +59,13 @@ const getSystemFieldsGroup = `
   }
 `;
 
+export const logicCommonTypes = `
+  fieldId
+  logicOperator
+  logicValue
+  logicAction
+`;
+
 const fields = `
   query fields($contentType: String!, $contentTypeId: String, $isVisible: Boolean, $boardId: String, $pipelineId: String) {
     fields(contentType: $contentType, contentTypeId: $contentTypeId, isVisible: $isVisible, boardId: $boardId, pipelineId: $pipelineId) {
@@ -81,10 +88,10 @@ const fields = `
         contentType
       }
       logics {
-        fieldId
-        logicOperator
-        logicValue
-        logicAction
+        ${logicCommonTypes}
+      }
+      actions {
+        ${logicCommonTypes}
         tagIds
         pipelineId
         boardId

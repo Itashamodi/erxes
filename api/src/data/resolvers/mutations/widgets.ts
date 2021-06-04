@@ -219,28 +219,21 @@ const widgetMutations = {
     // fields with actions
     const fieldsWithActions = await Fields.find({
       contentTypeId: formId,
-      $and: [
-        {
-          $or: [
-            { 'logics.logicAction': { $ne: 'show' } },
-            { 'logics.logicAction': { $ne: 'hide' } }
-          ]
-        }
-      ]
+      'actions.0': { $exists: true }
     });
 
-    for (const { logics = [] } of fieldsWithActions) {
-      for (const logic of logics) {
-        const submission = submissions.find(e => e._id === logic.fieldId);
+    for (const { actions = [], _id } of fieldsWithActions) {
+      for (const action of actions) {
+        const submission = submissions.find(e => e._id === _id);
         if (!submission) {
           continue;
         }
 
-        if (isLogicFulfilled(logic, submission.value)) {
-          if (logic.logicAction === 'tag') {
+        if (isLogicFulfilled(action, submission.value)) {
+          if (action.logicAction === 'tag') {
             const tagIds = [
               ...new Set([
-                ...(logic.tagIds || []),
+                ...(action.tagIds || []),
                 ...(cachedCustomer.tagIds || [])
               ])
             ];
@@ -251,52 +244,14 @@ const widgetMutations = {
             });
           }
 
-          if (['task', 'deal', 'ticket'].includes(logic.logicAction)) {
-            const { create } = getCollection(logic.logicAction);
-            const doc: any = {};
-
-            doc.stageId = logic.stageId;
-            doc.sourceConversationIds = [conversation._id];
-            doc.customerIds = [conversation.customerId];
-            doc.assignedUserIds = [conversation.assignedUserId];
-
-            switch (logic.logicAction) {
-              case 'task':
-                doc.customFieldsData = taskCustomData;
-                break;
-
-              case 'deal':
-                doc.customFieldsData = dealCustomData;
-                break;
-
-              case 'ticket':
-                doc.customFieldsData = ticketCustomData;
-                break;
-            }
-
-            const integration = await Integrations.getIntegration({
-              _id: integrationId
+          if (['task', 'deal', 'ticket'].includes(action.logicAction)) {
+            await Conversations.convert({
+              _id: conversation._id,
+              type: action.logicAction,
+              itemId: action.itemId || '',
+              stageId: action.stageId || '',
+              itemName: action.itemName || ''
             });
-
-            doc.name = `${Customers.getCustomerName(cachedCustomer)} - ${
-              integration.name
-            }`;
-            const user = await Users.getUser(integration.createdUserId);
-
-            const item = await itemsAdd(
-              doc,
-              logic.logicAction,
-              user,
-              create,
-              null
-            );
-
-            const a = await putActivityLog({
-              action: ACTIVITY_LOG_ACTIONS.CREATE_BOARD_ITEM,
-              data: { item, contentType: logic.logicAction }
-            });
-
-            console.log(a);
           }
         }
       }

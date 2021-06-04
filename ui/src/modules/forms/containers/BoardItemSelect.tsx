@@ -2,7 +2,7 @@ import client from 'apolloClient';
 import gql from 'graphql-tag';
 import { queries } from 'modules/boards/graphql';
 import { queries as fieldQueries } from 'modules/settings/properties/graphql';
-import { IField } from 'modules/segments/types';
+import { IField } from 'modules/settings/properties/types';
 import React from 'react';
 import BoardItemSelect from '../components/BoardItemSelect';
 
@@ -11,9 +11,13 @@ type IProps = {
   pipelineId?: string;
   stageId?: string;
   relType?: string;
+  cardId?: string;
+  cardName?: string;
   type: string;
   onChangeCard: (name?: string, cardId?: string) => void;
+  onChangeStage: (stageId: string) => void;
   onFetchProperties: (customProperties: IField[]) => void;
+  onChangeProperty: (selectedField: IField) => void;
 };
 
 class BoardItemSelectContainer extends React.Component<IProps> {

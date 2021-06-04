@@ -11,8 +11,9 @@ type Props = {
 class FieldPreview extends React.Component<Props, {}> {
   render() {
     const { field, onClick } = this.props;
-    let hasLogic = false;
-    let hasAction = false;
+    const { logics = [], actions = [] } = field;
+    let hasLogic = logics.length > 0;
+    let hasAction = actions.length > 0;
 
     for (const logic of field.logics || []) {
       if (['show', 'hide'].includes(logic.logicAction)) {

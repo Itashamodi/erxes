@@ -7,7 +7,11 @@ import {
 import DateControl from 'modules/common/components/form/DateControl';
 import { Formgroup } from 'modules/common/components/form/styles';
 import { __ } from 'modules/common/utils';
-import { IField, IFieldLogic } from 'modules/settings/properties/types';
+import {
+  IField,
+  IFieldAction,
+  IFieldLogic
+} from 'modules/settings/properties/types';
 import SelectTags from 'modules/tags/containers/SelectTags';
 import { ITag } from 'modules/tags/types';
 import React, { useState } from 'react';
@@ -20,18 +24,16 @@ import { DateWrapper, LogicItem, LogicRow, RowFill, RowSmall } from '../styles';
 // import BoardSelect from 'modules/boards/containers/BoardSelect';
 // import CardSelect from 'modules/boards/components/portable/CardSelect';
 import BoardItemSelectContainer from '../containers/BoardItemSelect';
-import { FlexRow } from '../styles';
-import Toggle from 'modules/common/components/Toggle';
-import Select from 'react-select-plus';
 
 type Props = {
   onChangeLogic: (
     name: string,
     value: string | number | Date,
     index: number,
-    title?: string
+    isLogic: boolean
   ) => void;
-  logic: IFieldLogic;
+  logic?: IFieldLogic;
+  action?: IFieldAction;
   fields: IField[];
   index: number;
   removeLogic: (index: number) => void;
@@ -39,6 +41,7 @@ type Props = {
   tags: ITag[];
   currentField: IField;
   type: string;
+  onChangeProperty: (selectedField: IField) => void;
 };
 
 const logicOptions = [
@@ -48,18 +51,44 @@ const logicOptions = [
 
 const actionOptions = [
   { value: 'tag', label: 'Tag this contact' },
-  { value: 'deal', label: 'Create a deal' },
+  { value: 'deal', label: 'Create a deal', disabled: true },
   { value: 'task', label: 'Create a task' },
   { value: 'ticket', label: 'Create a ticket' }
 ];
 
 function FieldLogic(props: Props) {
-  const { fields, logic, onChangeLogic, removeLogic, index, type } = props;
+  const {
+    fields,
+    logic,
+    action,
+    onChangeLogic,
+    removeLogic,
+    index,
+    type
+  } = props;
+
+  const isLogic = () => {
+    if (type === 'logic') {
+      return true;
+    }
+
+    return false;
+  };
 
   const getSelectedField = () => {
-    return fields.find(
-      field => field._id === logic.fieldId || field._id === logic.tempFieldId
-    );
+    let fieldId = '';
+
+    if (logic) {
+      fieldId =
+        type === 'logic' ? logic.fieldId || logic.tempFieldId || '' : '';
+    }
+
+    if (action) {
+      fieldId =
+        type === 'action' ? action.fieldId || action.tempFieldId || '' : '';
+    }
+
+    return fields.find(field => field._id === fieldId);
   };
 
   const getOperatorOptions = () => {
@@ -84,32 +113,33 @@ function FieldLogic(props: Props) {
 
   const onChangeFieldId = e => {
     const value = e.target.value;
-    onChangeLogic('fieldId', '', index);
+    onChangeLogic('fieldId', '', index, isLogic());
 
     if (props.type === 'action') {
-      onChangeLogic('fieldId', 'self', index);
+      onChangeLogic('fieldId', 'self', index, isLogic());
     }
 
     onChangeLogic(
       value.startsWith('tempId') ? 'tempFieldId' : 'fieldId',
       value,
-      index
+      index,
+      isLogic()
     );
 
     const operators = getOperatorOptions();
-    onChangeLogic('logicOperator', operators[1].value, index);
+    onChangeLogic('logicOperator', operators[1].value, index, isLogic());
   };
 
   const onChangeLogicOperator = e => {
-    onChangeLogic('logicOperator', e.target.value, index);
+    onChangeLogic('logicOperator', e.target.value, index, isLogic());
   };
 
   const onChangeLogicValue = e => {
-    onChangeLogic('logicValue', e.target.value, index);
+    onChangeLogic('logicValue', e.target.value, index, isLogic());
   };
 
   const onDateChange = value => {
-    onChangeLogic('logicValue', value, index);
+    onChangeLogic('logicValue', value, index, isLogic());
   };
 
   const remove = () => {
@@ -117,23 +147,29 @@ function FieldLogic(props: Props) {
   };
 
   const onChangeLogicAction = e => {
-    onChangeLogic('boardId', '', index);
-    onChangeLogic('pipelineId', '', index);
-    onChangeLogic('stageId', '', index);
-    onChangeLogic('itemId', '', index);
-    onChangeLogic('itemName', '', index);
-    onChangeLogic('logicAction', e.currentTarget.value, index);
+    onChangeLogic('boardId', '', index, isLogic());
+    onChangeLogic('pipelineId', '', index, isLogic());
+    onChangeLogic('stageId', '', index, isLogic());
+    onChangeLogic('itemId', '', index, isLogic());
+    onChangeLogic('itemName', '', index, isLogic());
+    onChangeLogic('logicAction', e.currentTarget.value, index, isLogic());
   };
 
   const onChangeTags = values => {
-    onChangeLogic('tagIds', values, index);
+    onChangeLogic('tagIds', values, index, isLogic());
   };
 
   const renderLogicValue = () => {
     let selectedField = getSelectedField();
+    let logicValue = '';
 
-    if (type === 'action') {
+    if (logic) {
+      logicValue = logic.logicValue;
+    }
+
+    if (action) {
       selectedField = props.currentField;
+      logicValue = action.logicValue;
     }
 
     if (selectedField) {
@@ -145,7 +181,7 @@ function FieldLogic(props: Props) {
         return (
           <FormControl
             componentClass="select"
-            defaultValue={logic.logicValue}
+            defaultValue={logicValue}
             name="logicValue"
             onChange={onChangeLogicValue}
           >
@@ -165,7 +201,7 @@ function FieldLogic(props: Props) {
           <DateWrapper>
             <DateControl
               placeholder={__('pick a date')}
-              value={logic.logicValue}
+              value={logicValue}
               timeFormat={
                 selectedField.validation === 'datetime' ? true : false
               }
@@ -178,7 +214,7 @@ function FieldLogic(props: Props) {
       if (selectedField.validation === 'number') {
         return (
           <FormControl
-            defaultValue={logic.logicValue}
+            defaultValue={logicValue}
             name="logicValue"
             onChange={onChangeLogicValue}
             type={'number'}
@@ -188,7 +224,7 @@ function FieldLogic(props: Props) {
 
       return (
         <FormControl
-          defaultValue={logic.logicValue}
+          defaultValue={logicValue}
           name="logicValue"
           onChange={onChangeLogicValue}
         />
@@ -199,7 +235,7 @@ function FieldLogic(props: Props) {
   };
 
   const renderTags = () => {
-    if (logic.logicAction !== 'tag' || type === 'logic') {
+    if (type === 'logic' || (action && action.logicAction !== 'tag')) {
       return null;
     }
 
@@ -208,23 +244,32 @@ function FieldLogic(props: Props) {
         <SelectTags
           type={'customer'}
           onChange={onChangeTags}
-          defaultValue={logic.tagIds || []}
+          defaultValue={(action && action.tagIds) || []}
         />
       </FormGroup>
     );
   };
 
   const [properties, setProperties] = useState<IField[]>([]);
-  const [selectedProperties, setSelectProperties] = useState<IField[]>([]);
+  // const [selectedProperties, setSelectProperties] = useState<IField[]>([]);
+  console.log('pro: ', properties);
 
   const renderBoardItemSelect = () => {
-    if (!['task', 'deal', 'ticket'].includes(logic.logicAction)) {
+    if (
+      type === 'logic' ||
+      !action ||
+      (action && action.logicAction === 'tag')
+    ) {
       return null;
     }
 
     const onChangeCardSelect = (name, cardId) => {
-      onChangeLogic('itemId', cardId, index);
-      onChangeLogic('itemName', name, index);
+      onChangeLogic('itemId', cardId, index, isLogic());
+      onChangeLogic('itemName', name, index, isLogic());
+    };
+
+    const onChangeStage = stageId => {
+      onChangeLogic('stageId', stageId, index, isLogic());
     };
 
     const onFetchProperties = customProperties => {
@@ -233,34 +278,25 @@ function FieldLogic(props: Props) {
 
     return (
       <BoardItemSelectContainer
-        type={logic.logicAction}
-        boardId={logic.boardId}
-        pipelineId={logic.pipelineId}
-        stageId={logic.stageId}
+        type={action.logicAction}
+        boardId={action.boardId}
+        pipelineId={action.pipelineId}
+        stageId={action.stageId}
         onChangeCard={onChangeCardSelect}
         onFetchProperties={onFetchProperties}
+        onChangeStage={onChangeStage}
+        cardId={action.itemId}
+        cardName={action.itemName}
+        onChangeProperty={props.onChangeProperty}
       />
     );
   };
 
   const renderFields = () => {
-    if (type === 'action') {
+    if (type === 'action' || !logic) {
       return null;
     }
 
-    let options = fields;
-    if (!['show', 'hide'].includes(logic.logicAction)) {
-      const { currentField } = props;
-      if (!currentField.text) {
-        currentField.text = 'Current field';
-      }
-
-      if (0 > options.findIndex(e => e._id === currentField._id)) {
-        options.unshift(currentField);
-      }
-    }
-
-    options = Array.from(new Set(options));
     return (
       <FormGroup>
         <ControlLabel>Fields</ControlLabel>
@@ -272,7 +308,7 @@ function FieldLogic(props: Props) {
         >
           <option value="" />
 
-          {options.map(field => (
+          {fields.map(field => (
             <option key={field._id} value={field._id}>
               {field.text}
             </option>
@@ -282,58 +318,26 @@ function FieldLogic(props: Props) {
     );
   };
 
-  const [propertiesEnabled, setEnabled] = useState(false);
+  let operatorValue = logic && logic.logicOperator;
 
-  const renderProperties = () => {
-    if (!logic.pipelineId) {
-      return null;
-    }
-    const onChange = e => {
-      setEnabled(e.target.checked ? true : false);
-    };
+  if (type === 'action' && action) {
+    operatorValue = action.logicOperator;
+  }
 
-    const onSelectProperty = options => {
-      setSelectProperties(options);
-    };
+  let options = logicOptions;
+  // const actions = props.currentField.actions || [];
 
-    return (
-      <>
-        <FormGroup>
-          <FlexRow>
-            <ControlLabel htmlFor="description">
-              {__('Select custom properties as form field')}
-            </ControlLabel>
-            <Toggle
-              defaultChecked={propertiesEnabled}
-              icons={{
-                checked: <span>Yes</span>,
-                unchecked: <span>No</span>
-              }}
-              onChange={onChange}
-            />
-          </FlexRow>
-        </FormGroup>
-        {propertiesEnabled ? (
-          <FormGroup>
-            <ControlLabel>Properties</ControlLabel>
-            <p>
-              {'Following properties will be added as field into this form.'}
-            </p>
-            <Select
-              placeholder={__('Select properties')}
-              onChange={onSelectProperty}
-              value={selectedProperties}
-              options={
-                properties &&
-                properties.map(e => ({ label: e.text, value: e._id }))
-              }
-              multi={true}
-            />
-          </FormGroup>
-        ) : null}
-      </>
-    );
-  };
+  if (type === 'action') {
+    options = actionOptions;
+
+    // if (actions.length > 1) {
+    //   actions.forEach(a => {
+    //     if (['deal', 'task', 'ticket'].includes(a.logicAction)) {
+    //       options = options.filter(e => e.value !== a.logicAction);
+    //     }
+    //   });
+    // }
+  }
 
   return (
     <LogicItem>
@@ -343,9 +347,9 @@ function FieldLogic(props: Props) {
             <ControlLabel>Actions</ControlLabel>
             <FormControl
               componentClass="select"
-              defaultValue={logic.logicAction}
+              defaultValue={action && action.logicAction}
               name="logicAction"
-              options={type === 'logic' ? logicOptions : actionOptions}
+              options={options}
               onChange={onChangeLogicAction}
             />
           </FormGroup>
@@ -359,7 +363,7 @@ function FieldLogic(props: Props) {
               <ControlLabel>Operator</ControlLabel>
               <FormControl
                 componentClass="select"
-                defaultValue={logic.logicOperator}
+                defaultValue={operatorValue}
                 name="logicOperator"
                 options={getOperatorOptions()}
                 onChange={onChangeLogicOperator}
@@ -370,7 +374,6 @@ function FieldLogic(props: Props) {
               <RowFill>{renderLogicValue()}</RowFill>
             </Formgroup>
           </LogicRow>
-          {renderProperties()}
         </RowFill>
         <Button onClick={remove} btnStyle="danger" icon="times" />
       </LogicRow>
