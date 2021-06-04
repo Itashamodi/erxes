@@ -405,6 +405,7 @@ export default class GenerateField extends React.Component<Props, State> {
         </ControlLabel>
         {hasLogic && <LogicIndicator>Logic</LogicIndicator>}
         {hasAction && <LogicIndicator>Action</LogicIndicator>}
+        {field.associatedFieldId && <LogicIndicator>Mapped</LogicIndicator>}
         {field.description ? <p>{field.description}</p> : null}
 
         {this.renderControl()}

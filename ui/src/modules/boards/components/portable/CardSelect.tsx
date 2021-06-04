@@ -23,7 +23,6 @@ type Props = {
   options: [{ label: string; value: string }];
   onChange: (option: { cardId?: string; name?: string }) => void;
   type: string;
-  value?: string;
   additionalValue?: string;
 };
 
@@ -44,17 +43,19 @@ class CardSelect extends React.Component<Props, State> {
   handleChange = option => {
     const { onChange } = this.props;
 
-    if (option) {
-      onChange({
-        cardId: option.value,
-        name: option.label
-      });
-
-      this.setState({
-        searchValue: option.value === 'copiedItem' ? option.label : '',
-        selectedValue: option
-      });
+    if (!option) {
+      option = { value: '', label: '' };
     }
+
+    onChange({
+      cardId: option.value,
+      name: option.label
+    });
+
+    this.setState({
+      searchValue: option.value === 'copiedItem' ? option.label : '',
+      selectedValue: option
+    });
   };
 
   handleInput = (searchValue: string) => {
@@ -84,16 +85,10 @@ class CardSelect extends React.Component<Props, State> {
 
   render() {
     const { placeholder, options, additionalValue } = this.props;
-    let { selectedValue } = this.state;
-
-    const option = { value: 'copiedItem', label: additionalValue || '' };
-
-    if (this.props.value) {
-      selectedValue = option;
-    }
+    const { selectedValue } = this.state;
 
     if (additionalValue) {
-      options.push(option);
+      options.push({ value: 'copiedItem', label: additionalValue });
     }
 
     return (
@@ -109,7 +104,7 @@ class CardSelect extends React.Component<Props, State> {
             onChange={this.handleChange}
             onInputChange={this.handleInput}
             onInputKeyDown={this.handleKeyDown}
-            clearable={false}
+            clearable={true}
           />
         </FillContent>
       </Wrapper>

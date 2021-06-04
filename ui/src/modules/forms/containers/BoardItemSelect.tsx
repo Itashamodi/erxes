@@ -16,8 +16,7 @@ type IProps = {
   type: string;
   onChangeCard: (name?: string, cardId?: string) => void;
   onChangeStage: (stageId: string) => void;
-  onFetchProperties: (customProperties: IField[]) => void;
-  onChangeProperty: (selectedField: IField) => void;
+  onChangeProperty: (selectedField?: IField) => void;
 };
 
 class BoardItemSelectContainer extends React.Component<IProps> {

@@ -23,9 +23,8 @@ type Props = {
     callback: (cards: any) => void
   ) => void;
   onChangeCard: (name?: string, cardId?: string) => void;
-  onFetchProperties: (fields: IField[]) => void;
   onChangeStage: (stageId: string) => void;
-  onChangeProperty: (selectedField: IField) => void;
+  onChangeProperty: (selectedField?: IField) => void;
 };
 
 type State = {
@@ -70,7 +69,6 @@ class AddForm extends React.Component<Props, State> {
 
       fetchProperties(this.state.boardId, this.state.pipelineId, data => {
         if (data) {
-          this.props.onFetchProperties(data.fields);
           this.setState({ properties: data.fields });
         }
       });
@@ -111,13 +109,18 @@ class AddForm extends React.Component<Props, State> {
     const { properties = [] } = this.state;
 
     const onChange = option => {
-      if (onChangeProperty) {
+      if (onChangeProperty && option) {
         const customProperty = properties.find(e => e._id === option.value);
-        if (customProperty) {
-          onChangeProperty(customProperty);
-          this.setState({ propertyId: customProperty._id });
-        }
+
+        onChangeProperty(customProperty);
+
+        return this.setState({
+          propertyId: customProperty && customProperty._id
+        });
       }
+
+      this.setState({ propertyId: '' });
+      onChangeProperty();
     };
 
     return (
@@ -139,10 +142,13 @@ class AddForm extends React.Component<Props, State> {
     const { cardId, name } = option;
 
     if (cardId && cardId !== 'copiedItem') {
+      this.setState({ cardId });
       return this.props.onChangeCard('', cardId);
     }
 
     this.props.onChangeCard(name, '');
+
+    this.setState({ cardName: name, cardId });
   };
 
   onChangeName = e => {
@@ -161,14 +167,14 @@ class AddForm extends React.Component<Props, State> {
       <SelectContainer>
         <HeaderRow>
           <HeaderContent>
-            <ControlLabel required={true}>Name</ControlLabel>
+            <ControlLabel>Name</ControlLabel>
 
             <CardSelect
               placeholder={`Add a new ${type} or select one`}
               options={this.state.cards}
               onChange={this.onChangeCardSelect}
               type={type}
-              value={'copiedItem'}
+              // value={'copiedItem'}
               additionalValue={this.state.cardName}
             />
           </HeaderContent>

@@ -43,12 +43,10 @@ function FieldLogics(props: Props) {
   );
 
   useEffect(() => {
-    console.log('use effect logics: ', logics);
     onFieldChange('logics', logics);
   }, [logics, onFieldChange]);
 
   useEffect(() => {
-    console.log('use effect actions');
     onFieldChange('actions', actions);
   }, [actions, onFieldChange]);
 
@@ -58,7 +56,6 @@ function FieldLogics(props: Props) {
   const onChangeLogic = (name, value, index, isLogic: boolean) => {
     // find current editing one
     if (isLogic) {
-      console.log('isLogic: ', isLogic);
       const currentLogic = logics.find((l, i) => i === index);
 
       // set new value
@@ -123,6 +120,10 @@ function FieldLogics(props: Props) {
     setLogics(logics.filter((l, i) => i !== index));
   };
 
+  const removeAction = (index: number) => {
+    setActions(actions.filter((l, i) => i !== index));
+  };
+
   const renderRows = data => {
     return (
       <>
@@ -134,6 +135,7 @@ function FieldLogics(props: Props) {
             action={type === 'action' ? item : null}
             onChangeLogic={onChangeLogic}
             removeLogic={removeLogic}
+            removeAction={removeAction}
             onChangeProperty={props.onPropertyChange}
             index={index}
             tags={props.tags}

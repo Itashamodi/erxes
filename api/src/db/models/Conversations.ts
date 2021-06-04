@@ -463,16 +463,29 @@ export const loadClass = () => {
       user?: IUserDocument,
       docModifier?: any
     ) {
-      const { _id, type, itemId, itemName, stageId } = args;
+      const {
+        _id,
+        type,
+        itemId,
+        itemName,
+        stageId,
+        customFieldsData = []
+      } = args;
 
       const conversation = await Conversations.getConversation(_id);
 
       const { collection, update, create } = getCollection(type);
 
+      console.log('bla,slag: ', getCollection(type));
+
       if (itemId) {
         const oldItem = await collection.findOne({ _id: itemId }).lean();
 
         const doc = oldItem;
+
+        doc.customFieldsData = [
+          ...new Set([...customFieldsData, ...oldItem.customFieldsData])
+        ];
 
         if (conversation.assignedUserId) {
           const assignedUserIds = oldItem.assignedUserIds || [];
@@ -525,8 +538,8 @@ export const loadClass = () => {
         doc.sourceConversationIds = [_id];
         doc.customerIds = [conversation.customerId];
         doc.assignedUserIds = [conversation.assignedUserId];
-
-        const item = await itemsAdd(doc, type, user, create, docModifier);
+        doc.customFieldsData = customFieldsData;
+        const item = await itemsAdd(doc, type, create, user, docModifier);
 
         return item._id;
       }

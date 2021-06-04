@@ -14,7 +14,7 @@ import {
 } from 'modules/settings/properties/types';
 import SelectTags from 'modules/tags/containers/SelectTags';
 import { ITag } from 'modules/tags/types';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   dateTypeChoices,
   numberTypeChoices,
@@ -37,6 +37,7 @@ type Props = {
   fields: IField[];
   index: number;
   removeLogic: (index: number) => void;
+  removeAction: (index: number) => void;
   fetchCards?: (stageId: string, callback: (cards: any) => void) => void;
   tags: ITag[];
   currentField: IField;
@@ -51,9 +52,9 @@ const logicOptions = [
 
 const actionOptions = [
   { value: 'tag', label: 'Tag this contact' },
-  { value: 'deal', label: 'Create a deal', disabled: true },
-  { value: 'task', label: 'Create a task' },
-  { value: 'ticket', label: 'Create a ticket' }
+  { value: 'deal', label: 'Create a deal or select property' },
+  { value: 'task', label: 'Create a task or select property' },
+  { value: 'ticket', label: 'Create a ticket or select property' }
 ];
 
 function FieldLogic(props: Props) {
@@ -63,6 +64,7 @@ function FieldLogic(props: Props) {
     action,
     onChangeLogic,
     removeLogic,
+    removeAction,
     index,
     type
   } = props;
@@ -143,7 +145,11 @@ function FieldLogic(props: Props) {
   };
 
   const remove = () => {
-    removeLogic(index);
+    if (type === 'logic') {
+      return removeLogic(index);
+    }
+
+    removeAction(index);
   };
 
   const onChangeLogicAction = e => {
@@ -250,9 +256,9 @@ function FieldLogic(props: Props) {
     );
   };
 
-  const [properties, setProperties] = useState<IField[]>([]);
-  // const [selectedProperties, setSelectProperties] = useState<IField[]>([]);
-  console.log('pro: ', properties);
+  // const [selectedFieldId, setFieldId] = useState<string>(
+  //   props.currentField.associatedFieldId || ''
+  // );
 
   const renderBoardItemSelect = () => {
     if (
@@ -272,8 +278,15 @@ function FieldLogic(props: Props) {
       onChangeLogic('stageId', stageId, index, isLogic());
     };
 
-    const onFetchProperties = customProperties => {
-      setProperties(customProperties.fields);
+    const onChangeProperty = (field?: IField) => {
+      if (!field) {
+        // return setFieldId('');
+        return;
+      }
+
+      // setFieldId(field._id);
+      props.onChangeProperty(field);
+      onChangeLogic('logicAction', 'propertyMap', index, isLogic());
     };
 
     return (
@@ -283,11 +296,10 @@ function FieldLogic(props: Props) {
         pipelineId={action.pipelineId}
         stageId={action.stageId}
         onChangeCard={onChangeCardSelect}
-        onFetchProperties={onFetchProperties}
         onChangeStage={onChangeStage}
         cardId={action.itemId}
         cardName={action.itemName}
-        onChangeProperty={props.onChangeProperty}
+        onChangeProperty={onChangeProperty}
       />
     );
   };
@@ -325,18 +337,24 @@ function FieldLogic(props: Props) {
   }
 
   let options = logicOptions;
-  // const actions = props.currentField.actions || [];
+  const actions = props.currentField.actions || [];
 
   if (type === 'action') {
     options = actionOptions;
 
-    // if (actions.length > 1) {
-    //   actions.forEach(a => {
-    //     if (['deal', 'task', 'ticket'].includes(a.logicAction)) {
-    //       options = options.filter(e => e.value !== a.logicAction);
-    //     }
-    //   });
-    // }
+    if (actions.length > 1) {
+      actions.forEach(a => {
+        if (['deal', 'task', 'ticket'].includes(a.logicAction)) {
+          options = options.map(e => {
+            if (e.value === a.logicAction) {
+              return { ...e, disabled: true };
+            }
+
+            return e;
+          });
+        }
+      });
+    }
   }
 
   return (
@@ -357,7 +375,6 @@ function FieldLogic(props: Props) {
           {renderFields()}
           {renderTags()}
           {renderBoardItemSelect()}
-
           <LogicRow>
             <RowSmall>
               <ControlLabel>Operator</ControlLabel>

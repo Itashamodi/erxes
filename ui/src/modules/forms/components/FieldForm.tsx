@@ -106,8 +106,13 @@ class FieldForm extends React.Component<Props, State> {
     });
   };
 
-  onPropertyChange = (selectedField: IField) => {
+  onPropertyChange = (selectedField?: IField) => {
     const { field, group } = this.state;
+
+    if (!selectedField) {
+      field.associatedFieldId = '';
+      return;
+    }
 
     field.associatedFieldId = selectedField._id;
     field.validation = selectedField.validation;
@@ -144,6 +149,10 @@ class FieldForm extends React.Component<Props, State> {
 
     const { field } = this.state;
 
+    field.actions =
+      field.actions &&
+      field.actions.filter(f => f.logicAction !== 'propertyMap');
+
     this.props.onSubmit(field);
   };
 
@@ -151,7 +160,6 @@ class FieldForm extends React.Component<Props, State> {
     attributeName: string,
     value: string | boolean | number | string[] | IFieldLogic[] | IFieldAction[]
   ) {
-    console.log('attributeName: ', attributeName);
     const { field } = this.state;
 
     field[attributeName] = value;
@@ -439,7 +447,7 @@ class FieldForm extends React.Component<Props, State> {
           {this.renderColumn()}
           {this.renderHtml()}
           {this.renderCustomPropertyGroup()}
-          {this.renderBoardItemSelect()}
+          {/* {this.renderBoardItemSelect()} */}
           {this.renderCustomProperty()}
         </CollapseContent>
 
@@ -630,15 +638,7 @@ class FieldForm extends React.Component<Props, State> {
   }
 
   renderCustomProperty() {
-    const { selectedOption, group, boardId, field, pipelineId } = this.state;
-
-    if (
-      group === '' ||
-      (['task', 'deal', 'ticket'].includes(group || '') &&
-        (!boardId || !field.stageId || !pipelineId))
-    ) {
-      return;
-    }
+    const { selectedOption, group, boardId, pipelineId } = this.state;
 
     const defaultValue =
       (selectedOption && selectedOption.value) ||

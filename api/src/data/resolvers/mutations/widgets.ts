@@ -12,7 +12,6 @@ import {
   Tags,
   Users
 } from '../../../db/models';
-import { getCollection } from '../../../db/models/boardUtils';
 import Messages from '../../../db/models/ConversationMessages';
 import {
   IBrowserInfo,
@@ -39,11 +38,7 @@ import { trackViewPageEvent } from '../../../events';
 import { get, set } from '../../../inmemoryStorage';
 import { graphqlPubsub } from '../../../pubsub';
 import { AUTO_BOT_MESSAGES, BOT_MESSAGE_TYPES } from '../../constants';
-import {
-  ACTIVITY_LOG_ACTIONS,
-  putActivityLog,
-  sendToVisitorLog
-} from '../../logUtils';
+import { sendToVisitorLog } from '../../logUtils';
 import { IContext } from '../../types';
 import {
   registerOnboardHistory,
@@ -58,7 +53,6 @@ import {
   isLogicFulfilled,
   solveSubmissions
 } from '../../widgetUtils';
-import { itemsAdd } from './boardUtils';
 import { getDocument, getMessengerApps } from './cacheUtils';
 import { conversationNotifReceivers } from './conversations';
 
@@ -245,12 +239,28 @@ const widgetMutations = {
           }
 
           if (['task', 'deal', 'ticket'].includes(action.logicAction)) {
+            let customFieldsData;
+
+            switch (action.logicAction) {
+              case 'deal':
+                customFieldsData = dealCustomData;
+                break;
+              case 'ticket':
+                customFieldsData = ticketCustomData;
+                break;
+
+              default:
+                customFieldsData = taskCustomData;
+                break;
+            }
+
             await Conversations.convert({
               _id: conversation._id,
               type: action.logicAction,
               itemId: action.itemId || '',
               stageId: action.stageId || '',
-              itemName: action.itemName || ''
+              itemName: action.itemName || '',
+              customFieldsData
             });
           }
         }

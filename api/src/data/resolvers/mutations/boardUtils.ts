@@ -114,6 +114,7 @@ export const itemsAdd = async (
     })
   };
 
+  console.log('createModel: ', createModel);
   const item = await createModel(extendedDoc);
 
   await createConformity({
