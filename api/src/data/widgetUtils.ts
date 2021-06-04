@@ -260,21 +260,11 @@ const prepareCustomFieldsData = (
   customerData: ICustomField[],
   submissionData: ICustomField[]
 ) => {
-  const customFieldsData: ICustomField[] = [];
-
   if (customerData.length === 0) {
     return submissionData;
   }
 
-  for (const data of submissionData) {
-    const existingData = customerData.find(e => e.field === data.field);
-
-    if (existingData && Array.isArray(existingData.value)) {
-      data.value = existingData.value.concat(data.value);
-    }
-
-    customFieldsData.push(data);
-  }
+  const customFieldsData = [...new Set([...customerData, ...submissionData])];
 
   return customFieldsData;
 };
